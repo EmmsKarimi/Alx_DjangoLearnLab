@@ -1,14 +1,32 @@
-from django.shortcuts import render
-from django.views.generic import DetailView
-from .models import Book, Library
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.shortcuts import render, redirect
 
-# Function-based view to list all books
-def list_books(request):
-    books = Book.objects.all()
-    return render(request, "list_books.html", {"books": books})
+# User Registration View
+def register_view(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Automatically log the user in after registration
+            return redirect("home")  # Redirect to homepage or dashboard
+    else:
+        form = UserCreationForm()
+    return render(request, "register.html", {"form": form})
 
-# Class-based view to display library details
-class LibraryDetailView(DetailView):
-    model = Library
-    template_name = "library_detail.html"
-    context_object_name = "library"
+# User Login View
+def login_view(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect("home")  # Redirect to homepage
+    else:
+        form = AuthenticationForm()
+    return render(request, "login.html", {"form": form})
+
+# User Logout View
+def logout_view(request):
+    logout(request)
+    return render(request, "logout.html")
