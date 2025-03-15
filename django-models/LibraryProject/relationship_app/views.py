@@ -1,5 +1,5 @@
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm  # Ensure this line is present
 from django.shortcuts import render, redirect
 
 # User Registration View
