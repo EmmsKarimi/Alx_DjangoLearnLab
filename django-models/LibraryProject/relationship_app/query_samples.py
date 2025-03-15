@@ -18,7 +18,7 @@ def get_books_by_author(author_name):
         author = Author.objects.get(name=author_name)  # Explicitly fetch the author
         return Book.objects.filter(author=author)  # Use the author instance in the filter
     except Author.DoesNotExist:
-        return None
+        return []
 
 # 2. List all books in a library
 def get_books_in_library(library_name):
@@ -26,14 +26,13 @@ def get_books_in_library(library_name):
         library = Library.objects.get(name=library_name)
         return library.books.all()
     except Library.DoesNotExist:
-        return None
+        return []
 
 # 3. Retrieve the librarian for a library
 def get_librarian_for_library(library_name):
     try:
-        library = Library.objects.get(name=library_name)
-        return library.librarian
-    except (Library.DoesNotExist, Librarian.DoesNotExist):
+        return Librarian.objects.get(library__name=library_name)  # Explicitly use Librarian.objects.get
+    except Librarian.DoesNotExist:
         return None
 
 # Sample usage
@@ -42,19 +41,10 @@ if __name__ == "__main__":
     library_name = "Central Library"
 
     books_by_author = get_books_by_author(author_name)
-    if books_by_author:
-        print(f"Books by {author_name}: {[book.title for book in books_by_author]}")
-    else:
-        print(f"No books found for author {author_name}")
+    print(f"Books by {author_name}: {[book.title for book in books_by_author]}" if books_by_author else f"No books found for author {author_name}")
 
     books_in_library = get_books_in_library(library_name)
-    if books_in_library:
-        print(f"Books in {library_name}: {[book.title for book in books_in_library]}")
-    else:
-        print(f"{library_name} not found")
+    print(f"Books in {library_name}: {[book.title for book in books_in_library]}" if books_in_library else f"{library_name} not found")
 
     librarian = get_librarian_for_library(library_name)
-    if librarian:
-        print(f"Librarian for {library_name}: {librarian.name}")
-    else:
-        print(f"No librarian found for {library_name}")
+    print(f"Librarian for {library_name}: {librarian.name}" if librarian else f"No librarian found for {library_name}")
