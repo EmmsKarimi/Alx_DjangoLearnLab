@@ -3,7 +3,7 @@ from django.views.generic.detail import DetailView
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import user_passes_test
-from .models import Library, Book, UserProfile
+from .models import Library, Book, UserProfile  # ✅ Ensure this import exists
 
 # Function-Based View (FBV) - List all books
 def list_books(request):
