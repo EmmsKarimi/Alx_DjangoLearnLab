@@ -14,7 +14,11 @@ from relationship_app.models import Author, Book, Library, Librarian
 
 # 1. Query all books by a specific author
 def get_books_by_author(author_name):
-    return Book.objects.filter(author__name=author_name)
+    try:
+        author = Author.objects.get(name=author_name)  # Explicitly fetch the author
+        return Book.objects.filter(author=author)  # Use the author instance in the filter
+    except Author.DoesNotExist:
+        return None
 
 # 2. List all books in a library
 def get_books_in_library(library_name):
@@ -37,8 +41,20 @@ if __name__ == "__main__":
     author_name = "J.K. Rowling"
     library_name = "Central Library"
 
-    print(f"Books by {author_name}: {[book.title for book in get_books_by_author(author_name)]}")
+    books_by_author = get_books_by_author(author_name)
+    if books_by_author:
+        print(f"Books by {author_name}: {[book.title for book in books_by_author]}")
+    else:
+        print(f"No books found for author {author_name}")
+
     books_in_library = get_books_in_library(library_name)
-    print(f"Books in {library_name}: {[book.title for book in books_in_library]}" if books_in_library else f"{library_name} not found")
+    if books_in_library:
+        print(f"Books in {library_name}: {[book.title for book in books_in_library]}")
+    else:
+        print(f"{library_name} not found")
+
     librarian = get_librarian_for_library(library_name)
-    print(f"Librarian for {library_name}: {librarian.name}" if librarian else f"No librarian found for {library_name}")
+    if librarian:
+        print(f"Librarian for {library_name}: {librarian.name}")
+    else:
+        print(f"No librarian found for {library_name}")
