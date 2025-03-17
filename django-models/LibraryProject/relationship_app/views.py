@@ -1,31 +1,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic.detail import DetailView
-from django.views.generic import CreateView, UpdateView, DeleteView
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import user_passes_test, login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
 from .models import Library, Book, UserProfile
 from .forms import BookForm  # Ensure this form exists
 
-# ✅ Existing Code (Unchanged)
+# ✅ 📚 Book Views
 
-# Function-Based View (FBV) - List all books
+@login_required
 def list_books(request):
+    """List all books."""
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
-# Class-Based View (CBV) - Display details for a specific library
+# ✅ 🔍 Library Detail View (CBV)
 class LibraryDetailView(DetailView):
     model = Library  
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# ✅ Authentication Views (Unchanged)
+# ✅ 👥 Authentication Views
 
-# User Registration View
 def register_view(request):
+    """User registration view."""
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -36,8 +37,8 @@ def register_view(request):
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
-# User Login View
 def login_view(request):
+    """User login view."""
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -48,12 +49,14 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'relationship_app/login.html', {'form': form})
 
-# User Logout View
+@login_required
 def logout_view(request):
+    """User logout view."""
     logout(request)
     return redirect('login')
 
-# ✅ Role-Based Access Control (Unchanged)
+# ✅ 🔐 Role-Based Access Control (RBAC)
+
 def is_admin(user):
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
 
@@ -63,7 +66,8 @@ def is_librarian(user):
 def is_member(user):
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
 
-# ✅ Role-Based Views (Unchanged)
+# ✅ 📌 Role-Based Views
+
 @user_passes_test(is_admin)
 def admin_view(request):
     return render(request, 'relationship_app/admin_view.html')
@@ -76,11 +80,11 @@ def librarian_view(request):
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
 
-# ✅ 🚀 NEW: Book Management Views with Permissions
+# ✅ 🚀 Book Management Views (FBVs)
 
-# Add a Book (Only for Librarians)
 @permission_required('relationship_app.can_add_book', raise_exception=True)
 def add_book(request):
+    """View to add a book (Only for Librarians)."""
     if request.method == 'POST':
         form = BookForm(request.POST)
         if form.is_valid():
@@ -90,9 +94,9 @@ def add_book(request):
         form = BookForm()
     return render(request, 'relationship_app/book_form.html', {'form': form})
 
-# Edit a Book (Only for Librarians)
 @permission_required('relationship_app.can_change_book', raise_exception=True)
 def edit_book(request, pk):
+    """View to edit a book (Only for Librarians)."""
     book = get_object_or_404(Book, pk=pk)
     if request.method == 'POST':
         form = BookForm(request.POST, instance=book)
@@ -101,19 +105,21 @@ def edit_book(request, pk):
             return redirect('list_books')
     else:
         form = BookForm(instance=book)
-    return render(request, 'relationship_app/book_form.html', {'form': form})
+    return render(request, 'relationship_app/book_form.html', {'form': form, 'book': book})
 
-# Delete a Book (Only for Librarians)
 @permission_required('relationship_app.can_delete_book', raise_exception=True)
 def delete_book(request, pk):
+    """View to delete a book (Only for Librarians)."""
     book = get_object_or_404(Book, pk=pk)
     if request.method == 'POST':
         book.delete()
         return redirect('list_books')
     return render(request, 'relationship_app/book_confirm_delete.html', {'book': book})
 
-# 🚀 Alternative: Class-Based Views for Book Management
+# ✅ ⚡ Alternative: Class-Based Views (CBVs) for CRUD Operations
+
 class BookCreateView(PermissionRequiredMixin, CreateView):
+    """Class-Based View to create a book (Only for Librarians)."""
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
@@ -121,6 +127,7 @@ class BookCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'relationship_app.can_add_book'
 
 class BookUpdateView(PermissionRequiredMixin, UpdateView):
+    """Class-Based View to update a book (Only for Librarians)."""
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
@@ -128,6 +135,7 @@ class BookUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = 'relationship_app.can_change_book'
 
 class BookDeleteView(PermissionRequiredMixin, DeleteView):
+    """Class-Based View to delete a book (Only for Librarians)."""
     model = Book
     template_name = 'relationship_app/book_confirm_delete.html'
     success_url = reverse_lazy('list_books')
