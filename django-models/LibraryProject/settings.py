@@ -124,6 +124,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model Configuration
+AUTH_USER_MODEL = 'relationship_app.CustomUser'  # Ensure the app name is correct
 
 LOGIN_REDIRECT_URL = '/'  # Redirects users after login (change if needed)
 LOGOUT_REDIRECT_URL = '/login/'  # Redirects users to login page after logout
