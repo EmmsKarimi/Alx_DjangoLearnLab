@@ -37,7 +37,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'LibraryProject.urls'
+# ✅ Fix project name (match folder structure)
+ROOT_URLCONF = 'libraryproject.urls'
 
 TEMPLATES = [
     {
@@ -55,7 +56,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'LibraryProject.wsgi.application'
+# ✅ Fix project name in WSGI
+WSGI_APPLICATION = 'libraryproject.wsgi.application'
 
 # Database
 DATABASES = {
@@ -79,13 +81,13 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static & Media Files
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Custom user model
-AUTH_USER_MODEL = 'users.CustomUser'
+# ✅ Custom User Model (Corrected)
+AUTH_USER_MODEL = "bookshelf.CustomUser"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
