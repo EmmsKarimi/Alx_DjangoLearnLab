@@ -102,3 +102,4 @@ SECURE_SSL_REDIRECT = True  # Redirects all non-HTTPS requests to HTTPS
 SECURE_HSTS_SECONDS = 31536000  # Enforces HTTPS for one year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Includes all subdomains in HSTS policy
 SECURE_HSTS_PRELOAD = True  # Allows HSTS preloading
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Ensures Django detects HTTPS correctly behind a proxy
