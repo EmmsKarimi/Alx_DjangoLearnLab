@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
+from .forms import ExampleForm  # Import ExampleForm
 
 @login_required
 def book_list(request):
