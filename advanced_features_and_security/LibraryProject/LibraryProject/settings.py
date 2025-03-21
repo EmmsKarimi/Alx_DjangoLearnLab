@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'your-secret-key-here'  # Replace with your own secret key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # Change to False in production
+DEBUG = False  # Change to False in production
 
 ALLOWED_HOSTS = ['*']  # Adjust this based on your deployment needs
 
@@ -91,3 +91,10 @@ AUTH_USER_MODEL = "bookshelf.CustomUser"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ✅ Security settings
+SECURE_BROWSER_XSS_FILTER = True  # Prevents XSS attacks
+X_FRAME_OPTIONS = "DENY"  # Prevents clickjacking
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME sniffing
+CSRF_COOKIE_SECURE = True  # Ensures CSRF tokens are only sent over HTTPS
+SESSION_COOKIE_SECURE = True  # Ensures session cookies are only sent over HTTPS
