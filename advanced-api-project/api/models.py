@@ -38,4 +38,5 @@ class Book(models.Model):
         if self.publication_year > current_year:
             raise ValueError("Publication year cannot be in the future.")
 
-    def __str
+    def __str__(self):
+        return f"{self.title} ({self.publication_year}) by {self.author.name}"
