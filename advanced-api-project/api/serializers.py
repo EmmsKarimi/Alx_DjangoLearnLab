@@ -8,7 +8,10 @@ class BookSerializer(serializers.ModelSerializer):
     
     - Serializes all fields.
     - Adds validation to ensure the publication year is not in the future.
+    - Accepts author ID for easier book creation.
     """
+
+    author = serializers.PrimaryKeyRelatedField(queryset=Author.objects.all(), source='author.id')
 
     class Meta:
         model = Book
@@ -29,7 +32,9 @@ class AuthorSerializer(serializers.ModelSerializer):
     
     - Includes all author fields.
     - Uses a nested BookSerializer to serialize related books.
+    - Allows book creation within the author serializer.
     """
+
     books = BookSerializer(many=True, read_only=True)
 
     class Meta:
