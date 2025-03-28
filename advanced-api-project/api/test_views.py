@@ -23,8 +23,8 @@ class BookAPITestCase(TestCase):
         self.book1 = Book.objects.create(title="Harry Potter", publication_year=1997, author=self.author)
         self.book2 = Book.objects.create(title="Fantastic Beasts", publication_year=2016, author=self.author)
 
-        # Authenticated client
-        self.client.force_authenticate(user=self.user)
+        # Authenticate user
+        self.client.login(username="testuser", password="password123")
 
     def test_list_books(self):
         """
