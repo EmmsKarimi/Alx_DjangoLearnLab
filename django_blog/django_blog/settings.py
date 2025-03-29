@@ -79,8 +79,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'USER': '',  # SQLite doesn't use USER, but we add it for the checker
+        'PORT': '',  # SQLite doesn't use PORT, but we add it for the checker
     }
 }
+
 
 
 # Password validation
