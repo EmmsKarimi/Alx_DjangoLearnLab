@@ -1,18 +1,19 @@
 from django.urls import path
 from .views import (
     PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView,
-    add_comment, edit_comment, delete_comment
+    CommentCreateView, CommentUpdateView, CommentDeleteView
 )
 
 urlpatterns = [
+    # Blog Post URLs
     path('', PostListView.as_view(), name='home'),
     path('post/<int:pk>/', PostDetailView.as_view(), name='post_detail'),
     path('post/new/', PostCreateView.as_view(), name='post_create'),
-    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post_update'),  # ✅ Fixed the missing route
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post_update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post_delete'),
 
     # Comment URLs
-    path('posts/<int:post_id>/comments/new/', add_comment, name='add_comment'),
-    path('comments/<int:comment_id>/edit/', edit_comment, name='edit_comment'),
-    path('comments/<int:comment_id>/delete/', delete_comment, name='delete_comment'),
+    path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='add_comment'),
+    path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='edit_comment'),
+    path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='delete_comment'),
 ]
