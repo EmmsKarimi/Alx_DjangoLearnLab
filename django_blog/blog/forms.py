@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from taggit.forms import TagWidget
+from taggit.forms import TagWidget  # Import TagWidget properly
 from .models import Comment, Post
 
 class UserRegisterForm(UserCreationForm):
@@ -21,5 +21,5 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ['title', 'content', 'tags']
         widgets = {
-            'tags': TagWidget(attrs={'class': 'form-control', 'placeholder': 'Add tags separated by commas'}),
+            'tags': TagWidget(),  # Ensure TagWidget() is used properly
         }
