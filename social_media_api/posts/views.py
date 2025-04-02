@@ -1,46 +1,50 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import Post, Comment
-from .serializers import PostSerializer, CommentSerializer
+from rest_framework.views import APIView
+from .models import User, UserFollower
+from .serializers import UserSerializer
 
-# Post viewset
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+# Follow user - Converted to class-based view
+class FollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        # Set the author to the current user
-        serializer.save(author=self.request.user)
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, permissions.IsOwnerOrReadOnly]
-        return super().get_permissions()
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Comment viewset
-class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+        # Check if already following
+        if UserFollower.objects.filter(user=current_user, followed_user=followed_user).exists():
+            return Response({'detail': 'You are already following this user'}, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-        # Set the author to the current user and link to post
-        serializer.save(author=self.request.user)
+        UserFollower.objects.create(user=current_user, followed_user=followed_user)
+        return Response({'detail': 'Followed successfully'}, status=status.HTTP_201_CREATED)
 
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, permissions.IsOwnerOrReadOnly]
-        return super().get_permissions()
+# Unfollow user - Converted to class-based view
+class UnfollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-# Feed view
-@api_view(['GET'])
-def user_feed(request):
-    current_user = request.user
-    followed_users = current_user.following.all()
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
-    serializer = PostSerializer(posts, many=True)
-    return Response(serializer.data)
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot unfollow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if following
+        try:
+            follow_entry = UserFollower.objects.get(user=current_user, followed_user=followed_user)
+        except UserFollower.DoesNotExist:
+            return Response({'detail': 'You are not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow_entry.delete()
+        return Response({'detail': 'Unfollowed successfully'}, status=status.HTTP_200_OK)
