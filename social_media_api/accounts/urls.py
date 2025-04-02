@@ -9,8 +9,8 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import update_last_login
 
-# Use CustomUser explicitly
-CustomUser = get_user_model()  # Assign get_user_model() to CustomUser
+# Use get_user_model() for CustomUser model
+CustomUser = get_user_model()  # Explicitly assign CustomUser
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()  # Use CustomUser here explicitly
