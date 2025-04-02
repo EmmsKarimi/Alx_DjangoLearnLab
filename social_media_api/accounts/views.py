@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
-from django.contrib.auth import get_user_model  # Add this import
+from django.contrib.auth import get_user_model
 from rest_framework import generics, status, permissions
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -12,7 +12,7 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 User = get_user_model()  # Ensure this is correctly placed here
 
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.all()  # Ensuring correct queryset usage
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -38,8 +38,9 @@ class LoginView(APIView):
                 return Response({'token': token.key, 'user': UserSerializer(user).data})
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
+# Profile view using GenericAPIView (fixing the yellow line warning for generics)
 class ProfileView(generics.RetrieveAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.all()  # Use the correct queryset
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
