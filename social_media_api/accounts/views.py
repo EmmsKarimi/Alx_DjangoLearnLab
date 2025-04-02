@@ -47,42 +47,46 @@ class ProfileView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-# Follow User View
-@api_view(['POST'])
-def follow_user(request, user_id):
-    current_user = request.user
-    try:
-        followed_user = CustomUser.objects.get(id=user_id)  # Explicitly use CustomUser
-    except CustomUser.DoesNotExist:
-        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+# Follow User View using generics.GenericAPIView
+class FollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    if current_user == followed_user:
-        return Response({'detail': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = CustomUser.objects.get(id=user_id)  # Explicitly use CustomUser
+        except CustomUser.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Check if already following
-    if UserFollower.objects.filter(user=current_user, followed_user=followed_user).exists():
-        return Response({'detail': 'You are already following this user'}, status=status.HTTP_400_BAD_REQUEST)
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
 
-    UserFollower.objects.create(user=current_user, followed_user=followed_user)
-    return Response({'detail': 'Followed successfully'}, status=status.HTTP_201_CREATED)
+        # Check if already following
+        if UserFollower.objects.filter(user=current_user, followed_user=followed_user).exists():
+            return Response({'detail': 'You are already following this user'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Unfollow User View
-@api_view(['POST'])
-def unfollow_user(request, user_id):
-    current_user = request.user
-    try:
-        followed_user = CustomUser.objects.get(id=user_id)  # Explicitly use CustomUser
-    except CustomUser.DoesNotExist:
-        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        UserFollower.objects.create(user=current_user, followed_user=followed_user)
+        return Response({'detail': 'Followed successfully'}, status=status.HTTP_201_CREATED)
 
-    if current_user == followed_user:
-        return Response({'detail': 'You cannot unfollow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+# Unfollow User View using generics.GenericAPIView
+class UnfollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Check if following
-    try:
-        follow_entry = UserFollower.objects.get(user=current_user, followed_user=followed_user)
-    except UserFollower.DoesNotExist:
-        return Response({'detail': 'You are not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = CustomUser.objects.get(id=user_id)  # Explicitly use CustomUser
+        except CustomUser.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    follow_entry.delete()
-    return Response({'detail': 'Unfollowed successfully'}, status=status.HTTP_200_OK)
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot unfollow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if following
+        try:
+            follow_entry = UserFollower.objects.get(user=current_user, followed_user=followed_user)
+        except UserFollower.DoesNotExist:
+            return Response({'detail': 'You are not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow_entry.delete()
+        return Response({'detail': 'Unfollowed successfully'}, status=status.HTTP_200_OK)
