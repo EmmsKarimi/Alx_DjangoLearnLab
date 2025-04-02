@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'accounts',
+    'posts',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -130,3 +131,27 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    # Pagination settings
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Set the number of results per page
+
+    # Authentication settings
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+
+    # Permission settings
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Ensure only authenticated users can access
+    ],
+
+    # Filtering and search settings
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework.filters.SearchFilter',
+    ),
+}
