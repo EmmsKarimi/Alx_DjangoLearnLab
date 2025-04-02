@@ -1,18 +1,16 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model  # Ensure this is your custom user model
 from rest_framework import generics, status, permissions
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from .models import User, UserFollower
+from .models import UserFollower
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 User = get_user_model()  # Ensure this is correctly placed here
 
+# Register User
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()  # Ensuring correct queryset usage
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -23,6 +21,7 @@ class RegisterView(generics.CreateAPIView):
         token, created = Token.objects.get_or_create(user=user_instance)
         return Response({'token': token.key, 'user': user})
 
+# Login User
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -38,51 +37,55 @@ class LoginView(APIView):
                 return Response({'token': token.key, 'user': UserSerializer(user).data})
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Profile view using GenericAPIView (fixing the yellow line warning for generics)
+# Profile View
 class ProfileView(generics.RetrieveAPIView):
-    queryset = User.objects.all()  # Use the correct queryset
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
 
-# Follow user
-@api_view(['POST'])
-def follow_user(request, user_id):
-    current_user = request.user
-    try:
-        followed_user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+# Follow User (using GenericAPIView)
+class FollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    if current_user == followed_user:
-        return Response({'detail': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Check if already following
-    if UserFollower.objects.filter(user=current_user, followed_user=followed_user).exists():
-        return Response({'detail': 'You are already following this user'}, status=status.HTTP_400_BAD_REQUEST)
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
 
-    UserFollower.objects.create(user=current_user, followed_user=followed_user)
-    return Response({'detail': 'Followed successfully'}, status=status.HTTP_201_CREATED)
+        # Check if already following
+        if UserFollower.objects.filter(user=current_user, followed_user=followed_user).exists():
+            return Response({'detail': 'You are already following this user'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Unfollow user
-@api_view(['POST'])
-def unfollow_user(request, user_id):
-    current_user = request.user
-    try:
-        followed_user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        UserFollower.objects.create(user=current_user, followed_user=followed_user)
+        return Response({'detail': 'Followed successfully'}, status=status.HTTP_201_CREATED)
 
-    if current_user == followed_user:
-        return Response({'detail': 'You cannot unfollow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+# Unfollow User (using GenericAPIView)
+class UnfollowUserView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Check if following
-    try:
-        follow_entry = UserFollower.objects.get(user=current_user, followed_user=followed_user)
-    except UserFollower.DoesNotExist:
-        return Response({'detail': 'You are not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, user_id):
+        current_user = request.user
+        try:
+            followed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    follow_entry.delete()
-    return Response({'detail': 'Unfollowed successfully'}, status=status.HTTP_200_OK)
+        if current_user == followed_user:
+            return Response({'detail': 'You cannot unfollow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if following
+        try:
+            follow_entry = UserFollower.objects.get(user=current_user, followed_user=followed_user)
+        except UserFollower.DoesNotExist:
+            return Response({'detail': 'You are not following this user'}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow_entry.delete()
+        return Response({'detail': 'Unfollowed successfully'}, status=status.HTTP_200_OK)
