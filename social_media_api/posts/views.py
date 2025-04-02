@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
-from accounts.models import UserFollower  # Assuming you have this model
+from accounts.models import UserFollower  # Assuming this model exists for following
 
 # Post viewset
 class PostViewSet(viewsets.ModelViewSet):
@@ -39,17 +39,17 @@ class CommentViewSet(viewsets.ModelViewSet):
 # Feed view
 @api_view(['GET'])
 def user_feed(request):
-    # Ensure the user is authenticated
-    if not request.user.is_authenticated:
-        return Response({"detail": "Authentication credentials were not provided."}, status=401)
-
     current_user = request.user
 
-    # Get the list of users the current user is following (this assumes you have a UserFollower model)
-    followed_users = UserFollower.objects.filter(user=current_user).values_list('followed_user', flat=True)
+    # Ensure the user is authenticated
+    if not current_user.is_authenticated:
+        return Response({"detail": "Authentication credentials were not provided."}, status=401)
 
-    # Retrieve posts from the followed users, ordered by creation date (most recent first)
-    posts = Post.objects.filter(author__id__in=followed_users).order_by('-created_at')
+    # Get the list of users that the current user follows
+    followed_users = current_user.following.all()  # Ensure you have the 'following' relationship set up correctly
+
+    # Get posts from the followed users, ordered by creation date (most recent first)
+    posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
 
     # Serialize and return the posts
     serializer = PostSerializer(posts, many=True)
