@@ -1,10 +1,11 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404  # Importing get_object_or_404
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer
-from accounts.models import User  # Assuming you have a User model
-from notifications.utils import create_notification  # Ensure this utility exists
+from accounts.models import User
+from notifications.models import Notification  # Assuming this is your Notification model
 
 # Post viewset
 class PostViewSet(viewsets.ModelViewSet):
@@ -38,7 +39,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 # Feed view
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])  # Ensure authentication is required
+@permission_classes([permissions.IsAuthenticated])
 def user_feed(request):
     current_user = request.user
 
@@ -57,16 +58,24 @@ def user_feed(request):
 @permission_classes([permissions.IsAuthenticated])
 def like_post(request, pk):
     user = request.user
-    try:
-        post = Post.objects.get(pk=pk)
-    except Post.DoesNotExist:
-        return Response({"detail": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+    # Fetch the post using get_object_or_404
+    post = get_object_or_404(Post, pk=pk)
 
+    # Create or get the Like object for the current user and post
     like, created = Like.objects.get_or_create(user=user, post=post)
+    
     if not created:
         return Response({"detail": "Already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
 
-    create_notification(user, post.author, "liked", post)  # Notify the post author
+    # Create a notification for the post author when a post is liked
+    Notification.objects.create(
+        recipient=post.author,  # The post author
+        actor=user,  # The user who liked the post
+        verb="liked",  # The action verb
+        target=post  # The target object being interacted with
+    )
+    
+    # Return the like data in the response
     return Response(LikeSerializer(like).data, status=status.HTTP_201_CREATED)
 
 # Unlike a post
@@ -74,11 +83,15 @@ def like_post(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def unlike_post(request, pk):
     user = request.user
+    # Fetch the post using get_object_or_404
+    post = get_object_or_404(Post, pk=pk)
+
     try:
-        post = Post.objects.get(pk=pk)
+        # Try to get the like object
         like = Like.objects.get(user=user, post=post)
-    except (Post.DoesNotExist, Like.DoesNotExist):
+    except Like.DoesNotExist:
         return Response({"detail": "Like not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    # Delete the like object
     like.delete()
     return Response({"detail": "Like removed"}, status=status.HTTP_204_NO_CONTENT)
