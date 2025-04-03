@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from accounts.models import User  # Assuming you have a User model
@@ -38,18 +38,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 # Feed view
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure authentication is required
 def user_feed(request):
     current_user = request.user
 
-    # Ensure the user is authenticated
-    if not current_user.is_authenticated:
-        return Response({"detail": "Authentication credentials were not provided."}, status=401)
-
     # Get the list of users that the current user follows
-    followed_users = current_user.following.all()  # Make sure 'following' relationship is set up properly
+    following_users = current_user.following.all()  # Make sure 'following' relationship exists
 
     # Fetch posts from users the current user follows, ordered by creation date (most recent first)
-    posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
+    posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
 
     # Serialize and return the posts
     serializer = PostSerializer(posts, many=True)
