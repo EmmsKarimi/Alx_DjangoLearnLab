@@ -1,7 +1,6 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from django.shortcuts import get_object_or_404  # Importing get_object_or_404
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer
 from accounts.models import User
@@ -58,11 +57,11 @@ def user_feed(request):
 @permission_classes([permissions.IsAuthenticated])
 def like_post(request, pk):
     user = request.user
-    # Fetch the post using get_object_or_404
-    post = get_object_or_404(Post, pk=pk)
+    # Fetch the post using generics.get_object_or_404
+    post = generics.get_object_or_404(Post, pk=pk)
 
     # Create or get the Like object for the current user and post
-    like, created = Like.objects.get_or_create(user=user, post=post)
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
     
     if not created:
         return Response({"detail": "Already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
@@ -83,8 +82,8 @@ def like_post(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def unlike_post(request, pk):
     user = request.user
-    # Fetch the post using get_object_or_404
-    post = get_object_or_404(Post, pk=pk)
+    # Fetch the post using generics.get_object_or_404
+    post = generics.get_object_or_404(Post, pk=pk)
 
     try:
         # Try to get the like object
